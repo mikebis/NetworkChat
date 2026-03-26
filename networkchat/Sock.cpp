@@ -4,11 +4,6 @@
 #include "networkchat.h"
 #include "networkchatDlg.h"
 
-//	Sock gListenSock2;
-//void Sock::PrepareListen2(){
-//	gListenSock2.Create(1235, SOCK_DGRAM, FD_READ, NULL);
-//}
-
 WORD getChecksum(BYTE* data, int length){
 	WORD word;	//16b
 	DWORD sum;	//32b
@@ -35,13 +30,13 @@ WORD getChecksum(BYTE* data, int length){
 
 void Sock::OnReceive(int nErrorCode) {
 	CString IP, str,nickname;
-	byte* buffer = new byte[1500];
-//	BYTE ack[12];
+	byte* buffer = new byte[1501];
+	byte* buffer_orig = buffer;
 	int i,size;
 	UINT port;
 	CnetworkchatDlg *dialog = (CnetworkchatDlg*)pointer;
 	WORD checksum,sent_checksum;
-	bool error,fragment,found = FALSE;
+	bool error = FALSE, fragment = FALSE, found = FALSE;
 
 	// prijem
 	size = ReceiveFrom(buffer,1500,IP,port,0);
@@ -51,15 +46,6 @@ void Sock::OnReceive(int nErrorCode) {
 	} else {
 
 		if(buffer[0] == 1){
-//			ack[0] = 2;
-//			ack[4] = buffer[4];
-//			ack[5] = buffer[5];
-//			ack[1] = ack[2] = ack[3] = ack[6] = ack[7] = ack[8] = ack[9] = ack[10] = ack[11] = 0;
-//
-//			for (i=0; i<12; i++) str.AppendFormat("%c",ack[i]);
-//
-//			i = gListenSock2.SendTo(str,str.GetLength(),port,IP);
-//			if(i == SOCKET_ERROR) MessageBoxA(NULL,"Chyba pri posielani","Chyba",0);
 
 			msg_number = ((buffer[6]<<8) & 0xFF00) + buffer[7];
 			total_msgs = ((buffer[8]<<8) & 0xFF00) + buffer[9];
@@ -90,11 +76,11 @@ void Sock::OnReceive(int nErrorCode) {
 			buffer = buffer + 13*sizeof(byte);
 			dialog->text_log.GetWindowTextA(str);
 			if(error) str.Append(":: CHYBA PRI PRENOSE ::\r\n\r\n");
-			str.AppendFormat("(" + dialog->getTime() + ") Prijatých %d znakov",size-13);
+			str.AppendFormat("(" + dialog->getTime() + ") Prijatï¿½ch %d znakov",size-13);
 			if(fragment) str.AppendFormat("\t\t\t\t\t\t [%d z %d]",msg_number+1,total_msgs);
 			str.Append("\r\n");
 			if(found) str.Append(nickname + " ");
-			str.AppendFormat("(%s:%d)\t[Checksum: prijatý 0x%.4Xh && vypoèítaný 0x%.4Xh]\r\n%s\r\n\r\n",IP,port,sent_checksum,checksum,buffer);
+			str.AppendFormat("(%s:%d)\t[Checksum: prijatï¿½ 0x%.4Xh && vypoï¿½ï¿½tanï¿½ 0x%.4Xh]\r\n%s\r\n\r\n",IP,port,sent_checksum,checksum,buffer);
 			dialog->text_log.SetWindowTextA(str);
 			dialog->text_log.LineScroll(dialog->text_log.GetLineCount(),0);
 		} else if (buffer[0] == 0) {
@@ -118,6 +104,7 @@ void Sock::OnReceive(int nErrorCode) {
 					if (contacts[i][0] == "") {
 						contacts[i][0] = IP;
 						contacts[i][1] = nickname;
+						contacts[i][2] = str;
 						dialog->list_contacts.InsertItem(i,nickname);
 						dialog->list_contacts.SetItemText(i,1,IP);
 						dialog->list_contacts.SetItemText(i,2,str);
@@ -130,4 +117,5 @@ void Sock::OnReceive(int nErrorCode) {
 		} 
 		CAsyncSocket::OnReceive(nErrorCode);	
 	}
+	delete[] buffer_orig;
 }

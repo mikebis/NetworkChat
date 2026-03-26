@@ -71,7 +71,7 @@ BOOL CnetworkchatDlg::OnInitDialog()
 
 	// inicializacia zoznamu IP
 	list_contacts.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-	list_contacts.InsertColumn(0,"Prezývka",0,95,0);
+	list_contacts.InsertColumn(0,"Prezï¿½vka",0,95,0);
 	list_contacts.InsertColumn(1,"IP adresa",0,95,0);
 	list_contacts.InsertColumn(2,"Port",0,42,0);
 	
@@ -91,8 +91,16 @@ BOOL CnetworkchatDlg::OnInitDialog()
 	HOSTENT *HostEnt;
 
 	int state = WSAStartup( MAKEWORD(2, 2), &wsadata);
+	if (state != 0) {
+		AfxMessageBox("Failed to initialize Winsock");
+		return FALSE;
+	}
 
 	HostEnt = gethostbyname("");
+	if (HostEnt == NULL) {
+		AfxMessageBox("Failed to resolve local host");
+		return FALSE;
+	}
 	local_addr.S_un.S_un_b.s_b1 = HostEnt->h_addr[0];
 	local_addr.S_un.S_un_b.s_b2 = HostEnt->h_addr[1];
 	local_addr.S_un.S_un_b.s_b3 = HostEnt->h_addr[2];
@@ -169,7 +177,7 @@ WORD getChecksum(CString data){
 	int length = data.GetLength();
 
 	if ( length %2 == 1 ) {
-		data.Append(0);
+		data.AppendChar('\0');
 		length++;
 	}
 	sum = 0;
@@ -192,7 +200,7 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 	if(text_message.GetWindowTextLengthA() > 0){
 		CString message,text,str,dest_ip;
 		int i,total_msgs, msg_num;
-		BYTE header[12];
+		BYTE header[13];
 		WORD checksum,sent_checksum;
 		CString sent_message;
 
@@ -202,29 +210,29 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 		// Type
 		header[0] = 1;
 		// Length
-		header[1] = text_message.GetWindowTextLengthA()/255;
-		header[2] = text_message.GetWindowTextLengthA()%255;
+		header[1] = text_message.GetWindowTextLengthA()/256;
+		header[2] = text_message.GetWindowTextLengthA()%256;
 		// Flagy
 		header[3] = 0;
 		text_message.GetWindowTextLengthA()>1460?header[3]|=1:FALSE;
 		// ID
-		header[4] = messageID/255;
-		header[5] = messageID%255;
+		header[4] = messageID/256;
+		header[5] = messageID%256;
 		messageID++;
 
 		text_message.GetWindowTextA(message);
 
 		// Total number of packets
 		total_msgs = ceil((double)message.GetLength()/MAX_LENGTH);
-		header[8] = (int)(total_msgs/255);
-		header[9] = (int)(total_msgs%255);
+		header[8] = (int)(total_msgs/256);
+		header[9] = (int)(total_msgs%256);
 
-		// Rozdelenie správy na segmenty
+		// Rozdelenie sprï¿½vy na segmenty
 		for(msg_num = 0; msg_num<total_msgs; msg_num++){ //message obsahuje spravu na odoslanie
 
 			// Packet Number
-			header[6] = msg_num/255;
-			header[7] = msg_num%255;
+			header[6] = msg_num/256;
+			header[7] = msg_num%256;
 
 			// Checksum
 			header[10] = 0;
@@ -256,25 +264,25 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 		}
 		text_log.GetWindowTextA(text);
 		text_message.GetWindowTextA(message);
-		text.AppendFormat("(" + getTime() + ") Odoslaných %d znakov\r\n" + nickname + " (%s:%d)\t[Checksum: odoslaný 0x%.4Xh && vypoèítaný 0x%.4Xh]\r\n" + message + "\r\n\r\n",message.GetLength(),inet_ntoa(local_addr),port,sent_checksum,checksum);
+		text.AppendFormat("(" + getTime() + ") Odoslanï¿½ch %d znakov\r\n" + nickname + " (%s:%d)\t[Checksum: odoslanï¿½ 0x%.4Xh && vypoï¿½ï¿½tanï¿½ 0x%.4Xh]\r\n" + message + "\r\n\r\n",message.GetLength(),inet_ntoa(local_addr),port,sent_checksum,checksum);
 		text_log.SetWindowTextA((LPCTSTR)text);
 		text_log.LineScroll(text_log.GetLineCount(),0);
 		text_message.SetWindowTextA("");
 		text_message.SetFocus();
-	} else MessageBox("Nejde posla prázdnu správu","Oznam",0);
+	} else MessageBox("Nejde poslaï¿½ prï¿½zdnu sprï¿½vu","Oznam",0);
 }
 
 void CnetworkchatDlg::sendNickname(){
 	CString message, IP, port;
-	BYTE header[12];
+	BYTE header[13];
 	WORD checksum;
 	int i;
 
 	text_ip.GetWindowTextA(IP);
 	text_sendport.GetWindowTextA(port);
 	header[0] = 0;
-	header[1] = nickname.GetLength()/255;
-	header[2] = nickname.GetLength()%255;
+	header[1] = nickname.GetLength()/256;
+	header[2] = nickname.GetLength()%256;
 	header[3] = 0;
 	header[4] = 0;
 	header[5] = 0;
@@ -350,14 +358,10 @@ void CnetworkchatDlg::OnNMClickList1(NMHDR *pNMHDR, LRESULT *pResult)
 
 void CnetworkchatDlg::OnEnSetfocusEdit1()
 {
-	// TODO: Add your control notification handler code here
-//	text_message.SetFocus();
 }
 
 void CnetworkchatDlg::OnNMRClickList1(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	//LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<NMITEMACTIVATE>(pNMHDR);
-	// TODO: Add your control notification handler code here
 	POSITION select = list_contacts.GetFirstSelectedItemPosition();
 	int number = list_contacts.GetNextSelectedItem(select);
 	CString str = list_contacts.GetItemText(number, 1);
