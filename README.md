@@ -2,7 +2,7 @@
 
 A peer-to-peer UDP chat application built with MFC (Microsoft Foundation Classes) and C++ using Winsock.
 
-> **Note:** This was a university/school project. The user interface is in Slovak.
+> **Note:** This was a university/school project.
 
 ## Features
 

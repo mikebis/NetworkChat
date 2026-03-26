@@ -38,11 +38,11 @@ void Sock::OnReceive(int nErrorCode) {
 	WORD checksum,sent_checksum;
 	bool error = FALSE, fragment = FALSE, found = FALSE;
 
-	// prijem
+	// receive
 	size = ReceiveFrom(buffer,1500,IP,port,0);
 	if(size == SOCKET_ERROR) {
-		str.Format("Nastala chyba v ReceiveFrom(...)\nKod chyby: %d",GetLastError());
-		MessageBoxA(NULL,str,"Chyba",0);
+		str.Format("Error in ReceiveFrom(...)\nError code: %d",GetLastError());
+		MessageBoxA(NULL,str,"Error",0);
 	} else {
 
 		if(size < 13) {
@@ -58,14 +58,14 @@ void Sock::OnReceive(int nErrorCode) {
 
 			buffer[size] = '\0';
 
-			// zlozenie prijateho checksumu
+			// assemble received checksum
 			sent_checksum = buffer[10]<<8;
 			sent_checksum &= 0xFF00;
 			sent_checksum += buffer[11];
 			buffer[10] = 0;
 			buffer[11] = 0;
 
-			// vypocitanie checksumu
+			// calculate checksum
 			checksum = getChecksum(buffer,size);
 
 			error = (checksum != sent_checksum);
@@ -77,15 +77,15 @@ void Sock::OnReceive(int nErrorCode) {
 					break;
 				}
 
-			// odstranenie hlavicky
+			// remove header
 			buffer = buffer + 13*sizeof(byte);
 			dialog->text_log.GetWindowTextA(str);
-			if(error) str.Append(":: CHYBA PRI PRENOSE ::\r\n\r\n");
-			str.AppendFormat("(" + dialog->getTime() + ") Prijat�ch %d znakov",size-13);
-			if(fragment) str.AppendFormat("\t\t\t\t\t\t [%d z %d]",msg_number+1,total_msgs);
+			if(error) str.Append(":: TRANSFER ERROR ::\r\n\r\n");
+			str.AppendFormat("(" + dialog->getTime() + ") Received %d characters",size-13);
+			if(fragment) str.AppendFormat("\t\t\t\t\t\t [%d of %d]",msg_number+1,total_msgs);
 			str.Append("\r\n");
 			if(found) str.Append(nickname + " ");
-			str.AppendFormat("(%s:%d)\t[Checksum: prijat� 0x%.4Xh && vypo��tan� 0x%.4Xh]\r\n",IP,port,sent_checksum,checksum);
+			str.AppendFormat("(%s:%d)\t[Checksum: received 0x%.4Xh && computed 0x%.4Xh]\r\n",IP,port,sent_checksum,checksum);
 			str.AppendFormat("%s\r\n\r\n",buffer);
 			dialog->text_log.SetWindowTextA(str);
 			dialog->text_log.LineScroll(dialog->text_log.GetLineCount(),0);
@@ -96,16 +96,16 @@ void Sock::OnReceive(int nErrorCode) {
 			str.Format("%d",port);
 
 			for(i=0; i<50; i++)
-				if (IP.Compare(contacts[i][0]) == 0) {  // ak sa nasiel v zozname
+				if (IP.Compare(contacts[i][0]) == 0) {  // if found in contact list
 					found = TRUE;
 					if (nickname.Compare(contacts[i][1]) != 0) {
-						contacts[i][1] = nickname;  // ak je iny nick pri ip tak sa opravi
+						contacts[i][1] = nickname;  // update nickname if changed
 						dialog->list_contacts.SetItemText(i,0,nickname);
 						dialog->list_contacts.SetItemText(i,2,str);
 					}
 				}
 				
-			if (!found){  // pridanie do zoznamu
+			if (!found){  // add to contact list
 				for (i = 0; i<50; i++)
 					if (contacts[i][0] == "") {
 						contacts[i][0] = IP;

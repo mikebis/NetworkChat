@@ -36,7 +36,7 @@ void CnetworkchatDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON2, bn_save);
 	DDX_Control(pDX, IDC_IPADDRESS1, text_ip);
 	DDX_Control(pDX, IDC_EDIT5, text_sendport);
-	DDX_Control(pDX, IDC_BUTTON3, bn_pridajip);
+	DDX_Control(pDX, IDC_BUTTON3, bn_addip);
 	DDX_Control(pDX, IDC_CHECK1, check_sum);
 	DDX_Control(pDX, IDC_BUTTON4, bn_clear);
 }
@@ -65,15 +65,15 @@ BOOL CnetworkchatDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	// inicializacia zoznamu IP
+	// initialize IP contact list
 	list_contacts.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-	list_contacts.InsertColumn(0,"Prez�vka",0,95,0);
-	list_contacts.InsertColumn(1,"IP adresa",0,95,0);
+	list_contacts.InsertColumn(0,"Nickname",0,95,0);
+	list_contacts.InsertColumn(1,"IP address",0,95,0);
 	list_contacts.InsertColumn(2,"Port",0,42,0);
 	
 
 
-	// inicializacia nastaveni
+	// initialize settings
 	CString temp;
 	nickname = "Nick";
 	port = 1234;
@@ -82,7 +82,7 @@ BOOL CnetworkchatDlg::OnInitDialog()
 	text_port.SetWindowTextA(temp);
 
 
-	//inicializacia socketov
+	// initialize sockets
 	WSAData wsadata;
 	HOSTENT *HostEnt;
 
@@ -230,8 +230,8 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 		header[8] = (int)(total_msgs/256);
 		header[9] = (int)(total_msgs%256);
 
-		// Rozdelenie spr�vy na segmenty
-		for(msg_num = 0; msg_num<total_msgs; msg_num++){ //message obsahuje spravu na odoslanie
+		// split message into segments
+		for(msg_num = 0; msg_num<total_msgs; msg_num++){
 
 			// Packet Number
 			header[6] = msg_num/256;
@@ -254,26 +254,26 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 				header[11] = LOBYTE(sent_checksum);
 			}
 
-			// Nove skomponovanie spravy so spravnym checksumom
+			// recompose message with correct checksum
 			sent_message = "";
 			for(i=0; i<13; i++) sent_message.AppendFormat("%c",header[i]);
 			sent_message.Append(message.Mid(msg_num*MAX_LENGTH,MAX_LENGTH));
 
-			// Odoslanie
+			// send
 			sendNickname();
 			i = gListenSock.SendTo(sent_message,sent_message.GetLength(),atoi(str),dest_ip);
-			if(i == SOCKET_ERROR) MessageBox("Chyba pri posielani","Chyba",0);
+			if(i == SOCKET_ERROR) MessageBox("Error sending","Error",0);
 
 		}
 		text_log.GetWindowTextA(text);
 		text_message.GetWindowTextA(message);
-		text.AppendFormat("(" + getTime() + ") Odoslan�ch %d znakov\r\n" + nickname + " (%s:%d)\t[Checksum: odoslan� 0x%.4Xh && vypo��tan� 0x%.4Xh]\r\n",message.GetLength(),inet_ntoa(local_addr),port,sent_checksum,checksum);
+		text.AppendFormat("(" + getTime() + ") Sent %d characters\r\n" + nickname + " (%s:%d)\t[Checksum: sent 0x%.4Xh && computed 0x%.4Xh]\r\n",message.GetLength(),inet_ntoa(local_addr),port,sent_checksum,checksum);
 		text.Append(message + "\r\n\r\n");
 		text_log.SetWindowTextA((LPCTSTR)text);
 		text_log.LineScroll(text_log.GetLineCount(),0);
 		text_message.SetWindowTextA("");
 		text_message.SetFocus();
-	} else MessageBox("Nejde posla� pr�zdnu spr�vu","Oznam",0);
+	} else MessageBox("Cannot send empty message","Notice",0);
 }
 
 void CnetworkchatDlg::sendNickname(){
@@ -309,7 +309,7 @@ void CnetworkchatDlg::sendNickname(){
 	message.Append(nickname);
 
 	i = gListenSock.SendTo(message,message.GetLength(),atoi(port),IP);
-	if(i == SOCKET_ERROR) MessageBox("Chyba pri posielani","Chyba",0);
+	if(i == SOCKET_ERROR) MessageBox("Error sending","Error",0);
 }
 
 void CnetworkchatDlg::OnBnClickedButton2() // Settings

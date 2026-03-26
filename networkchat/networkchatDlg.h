@@ -49,7 +49,7 @@ public:
 	afx_msg void OnBnClickedButton2();
 	CIPAddressCtrl text_ip;
 	CEdit text_sendport;
-	CButton bn_pridajip;
+	CButton bn_addip;
 	afx_msg void OnBnClickedButton3();
 	CButton check_sum;
 	afx_msg void OnBnClickedButton4();
