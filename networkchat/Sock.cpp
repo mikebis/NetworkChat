@@ -92,7 +92,7 @@ void Sock::OnReceive(int nErrorCode) {
 			for(i=0; i<50; i++)
 				if (IP.Compare(contacts[i][0]) == 0) {  // ak sa nasiel v zozname
 					found = TRUE;
-					if (IP.Compare(contacts[i][1]) != 0) {
+					if (nickname.Compare(contacts[i][1]) != 0) {
 						contacts[i][1] = nickname;  // ak je iny nick pri ip tak sa opravi
 						dialog->list_contacts.SetItemText(i,0,nickname);
 						dialog->list_contacts.SetItemText(i,2,str);

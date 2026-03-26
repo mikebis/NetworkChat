@@ -219,6 +219,8 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 		header[4] = messageID/256;
 		header[5] = messageID%256;
 		messageID++;
+		// Reserved
+		header[12] = 0;
 
 		text_message.GetWindowTextA(message);
 
@@ -264,7 +266,8 @@ void CnetworkchatDlg::OnBnClickedButton1() // Send message
 		}
 		text_log.GetWindowTextA(text);
 		text_message.GetWindowTextA(message);
-		text.AppendFormat("(" + getTime() + ") Odoslan�ch %d znakov\r\n" + nickname + " (%s:%d)\t[Checksum: odoslan� 0x%.4Xh && vypo��tan� 0x%.4Xh]\r\n" + message + "\r\n\r\n",message.GetLength(),inet_ntoa(local_addr),port,sent_checksum,checksum);
+		text.AppendFormat("(" + getTime() + ") Odoslan�ch %d znakov\r\n" + nickname + " (%s:%d)\t[Checksum: odoslan� 0x%.4Xh && vypo��tan� 0x%.4Xh]\r\n",message.GetLength(),inet_ntoa(local_addr),port,sent_checksum,checksum);
+		text.Append(message + "\r\n\r\n");
 		text_log.SetWindowTextA((LPCTSTR)text);
 		text_log.LineScroll(text_log.GetLineCount(),0);
 		text_message.SetWindowTextA("");
@@ -292,6 +295,7 @@ void CnetworkchatDlg::sendNickname(){
 	header[9] = 0;
 	header[10] = 0;
 	header[11] = 0;
+	header[12] = 0;
 	
 	message = "";
 	for(i=0; i<13; i++) message.AppendFormat("%c",header[i]);
@@ -346,8 +350,8 @@ void CnetworkchatDlg::OnBnClickedButton4()
 
 void CnetworkchatDlg::OnNMClickList1(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	//LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<NMITEMACTIVATE>(pNMHDR);
 	POSITION select = list_contacts.GetFirstSelectedItemPosition();
+	if (select == NULL) { *pResult = 0; return; }
 	int number = list_contacts.GetNextSelectedItem(select);
 	CString str = list_contacts.GetItemText(number, 1);
 	text_ip.SetWindowTextA(str);
@@ -363,6 +367,7 @@ void CnetworkchatDlg::OnEnSetfocusEdit1()
 void CnetworkchatDlg::OnNMRClickList1(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	POSITION select = list_contacts.GetFirstSelectedItemPosition();
+	if (select == NULL) { *pResult = 0; return; }
 	int number = list_contacts.GetNextSelectedItem(select);
 	CString str = list_contacts.GetItemText(number, 1);
 	list_contacts.DeleteItem(number);	
