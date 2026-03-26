@@ -1,7 +1,6 @@
 // networkchatDlg.cpp : implementation file
 //
 
-#pragma once
 #include "stdafx.h"
 #include "networkchat.h"
 #include "networkchatDlg.h"
@@ -45,7 +44,6 @@ void CnetworkchatDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CnetworkchatDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_BUTTON1, &CnetworkchatDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &CnetworkchatDlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON3, &CnetworkchatDlg::OnBnClickedButton3)
@@ -66,8 +64,6 @@ BOOL CnetworkchatDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
-
-	// TODO: Add extra initialization here
 
 	// inicializacia zoznamu IP
 	list_contacts.SetExtendedStyle(LVS_EX_FULLROWSELECT);
@@ -160,7 +156,12 @@ HCURSOR CnetworkchatDlg::OnQueryDragIcon()
 
 
 void CnetworkchatDlg::PrepareListen(){
-	gListenSock.Create(port, SOCK_DGRAM, FD_READ, NULL);
+	if (!gListenSock.Create(port, SOCK_DGRAM, FD_READ, NULL)) {
+		CString err;
+		err.Format("Failed to create socket on port %d", port);
+		AfxMessageBox(err);
+		return;
+	}
 	gListenSock.pointer = this;
 }
 
@@ -332,12 +333,14 @@ void CnetworkchatDlg::OnBnClickedButton3() // Contact list
 	CString addIP,temp;
 
 	text_ip.GetWindowTextA(addIP);
-	if(text_sendport.GetWindowTextLengthA() != 0)	{
-		text_sendport.GetWindowTextA(temp);
-		addIP.Append(":"+temp);
-	} else addIP.Append(":1234");
 	list_contacts.InsertItem(0,"???");
 	list_contacts.SetItemText(0,1,addIP);
+	if(text_sendport.GetWindowTextLengthA() != 0)	{
+		text_sendport.GetWindowTextA(temp);
+		list_contacts.SetItemText(0,2,temp);
+	} else {
+		list_contacts.SetItemText(0,2,"1234");
+	}
 	text_ip.ClearAddress();
 	text_sendport.SetWindowTextA("");
 }

@@ -45,6 +45,11 @@ void Sock::OnReceive(int nErrorCode) {
 		MessageBoxA(NULL,str,"Chyba",0);
 	} else {
 
+		if(size < 13) {
+			delete[] buffer_orig;
+			return;
+		}
+
 		if(buffer[0] == 1){
 
 			msg_number = ((buffer[6]<<8) & 0xFF00) + buffer[7];
@@ -80,7 +85,8 @@ void Sock::OnReceive(int nErrorCode) {
 			if(fragment) str.AppendFormat("\t\t\t\t\t\t [%d z %d]",msg_number+1,total_msgs);
 			str.Append("\r\n");
 			if(found) str.Append(nickname + " ");
-			str.AppendFormat("(%s:%d)\t[Checksum: prijat� 0x%.4Xh && vypo��tan� 0x%.4Xh]\r\n%s\r\n\r\n",IP,port,sent_checksum,checksum,buffer);
+			str.AppendFormat("(%s:%d)\t[Checksum: prijat� 0x%.4Xh && vypo��tan� 0x%.4Xh]\r\n",IP,port,sent_checksum,checksum);
+			str.AppendFormat("%s\r\n\r\n",buffer);
 			dialog->text_log.SetWindowTextA(str);
 			dialog->text_log.LineScroll(dialog->text_log.GetLineCount(),0);
 		} else if (buffer[0] == 0) {
