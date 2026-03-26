@@ -1,0 +1,4 @@
+// Microsoft Visual C++ generated Help ID include file.
+// Used by networkchat.rc
+//
+#define HIDC_BUTTON1                    0x806603ea    // IDD_NETWORKCHAT_DIALOG [English (United States)]
